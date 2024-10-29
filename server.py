@@ -34,12 +34,16 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         user_agent = self.headers.get('User-Agent')
         accept = self.headers.get('Accept')
 
-        # log message
-        print(f"Received request from {address}") # (host, port)
-        print(command)
-        print(f"Host: {host}")
-        print(f"User-Agent: {user_agent}")
-        print(f"Accept: {accept}")
+        log_message = f"""./lb
+        Received request from {address}
+        {command}
+        Host: {host}
+        User-Agent: {user_agent}
+        Accept: {accept}"""
+
+        # Write log message to .lb file
+        with open('.lb', 'a') as log_file:
+            log_file.write(log_message + '\n')
 
         if self.path == '/hello':
             # send response -> 200 = OK
