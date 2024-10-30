@@ -22,39 +22,46 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 PORT = 8000
 
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
-    # handle GET requests
-    def do_GET(self):
+    # intercepts GET requests from client
+    def do_GET(self): 
         # get client address
         address = self.client_address[0]
         
         # get command, path, request_version
         command = f"{self.command} {self.path} {self.request_version}"
 
+        # retreives headers from request
         host = self.headers.get('Host')
         user_agent = self.headers.get('User-Agent')
         accept = self.headers.get('Accept')
 
-        log_message = f"""./lb
+        # constructing log message and placing file in directory
+        # log message only constructed once user navigates to page
+        log_message = f"""./msg
         Received request from {address}
         {command}
         Host: {host}
         User-Agent: {user_agent}
         Accept: {accept}"""
 
-        # Write log message to .lb file
-        with open('.lb', 'a') as log_file:
+        # Write log message to .msg file in append mode
+        # with opens the file and automatically closes file
+        with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        if self.path == '/hello':
-            # send response -> 200 = OK
-            self.send_response(200, "Hi")
+        # if /hello is at end of URL
+        # if self.path == '/hello':
+        
+        # send response -> 200 = OK
+        self.send_response(200, "Hi")
 
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(b"Hello, World!")
+        # send_header(keyword, value); sending header information
+        self.send_header("Content-type", "text/html")
+        self.end_headers() # THIS IS REQUIRED
+        self.wfile.write(b"Hello, World!") # actual message that prints
 
-        else:
-            super().do_GET()
+        # else:
+        #     super().do_GET()
 
 # Server setup
 with HTTPServer(('localhost', PORT), Handler) as server:

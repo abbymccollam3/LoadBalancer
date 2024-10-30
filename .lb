@@ -1,6 +1,0 @@
-./lb
-        Received request from 127.0.0.1
-        GET / HTTP/1.1
-        Host: localhost:8000
-        User-Agent: curl/8.7.1
-        Accept: */*
