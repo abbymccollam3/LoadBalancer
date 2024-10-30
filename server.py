@@ -16,6 +16,8 @@ LOG MESSAGE FORMAT:
 # run python -m http.server 8000
 # navigate http://localhost:8000 -> displays files/directories on port
 
+import requests
+
 from http.server import SimpleHTTPRequestHandler, HTTPServer 
 # HTTPServer (server_address, request handler class)
 
@@ -50,19 +52,31 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        # if /hello is at end of URL
-        # if self.path == '/hello':
-
         # send response -> 200 = OK
         self.send_response(200, "Hi")
 
         # send_header(keyword, value); sending header information
         self.send_header("Content-type", "text/html")
         self.end_headers() # THIS IS REQUIRED
-        self.wfile.write(b"Hello, World!") # actual message that prints
+        
+        # if /hello is at end of URL
+        if self.path == '/hello':
+            self.wfile.write(b"Hello, World!") # actual message that prints
 
-        # else:
-        #     super().do_GET()
+        # this is sending to back end
+        elif self.path == '/':
+            # The API endpoint
+            url = "https://jsonplaceholder.typicode.com/posts/1"
+
+            # A GET request to the API
+            response = requests.get(url)
+
+            print (f"Response from server: {self.request_version} {response.status_code} OK")
+            print (f"Hello From Backend Server")
+        
+    
+        else:
+            super().do_GET()
 
 # Server setup listening on localhost
 # HTTPServer (serverAddress, Request Handler Class)
