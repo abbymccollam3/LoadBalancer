@@ -21,6 +21,7 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 PORT = 8000
 
+# this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
     # intercepts GET requests from client
     def do_GET(self): 
@@ -51,7 +52,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
 
         # if /hello is at end of URL
         # if self.path == '/hello':
-        
+
         # send response -> 200 = OK
         self.send_response(200, "Hi")
 
@@ -63,7 +64,8 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         # else:
         #     super().do_GET()
 
-# Server setup
+# Server setup listening on localhost
+# HTTPServer (serverAddress, Request Handler Class)
 with HTTPServer(('localhost', PORT), Handler) as server:
     print(f"Server started at http://localhost:{PORT}")
-    server.serve_forever()
+    server.serve_forever() # starts and keeps running server
