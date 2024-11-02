@@ -18,13 +18,21 @@ LOG MESSAGE FORMAT:
 
 import requests
 import itertools
+import threading
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer 
 # HTTPServer (server_address, request handler class)
 
 PORT = 8000
 backends = ['http://localhost:8001', 'http://localhost:8002']
+backend_ports = [8001, 8002]
 backend_pool = itertools.cycle(backends)  # Round-robin selection
+
+class BackEndHandler (SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200, "Hi")
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
 
 # this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
@@ -55,29 +63,44 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        backend_url = next(backend_pool) #selecting next backend server in iteration
+        backend_url = next(backend_pool) + self.path #selecting next backend server in iteration
         try:
-            # A GET request to the API
-            response = requests.get(backend_url)
+            # response formed with backend url and header
+            response = requests.get(backend_url, headers=self.headers)
 
-            # send response -> 200 = OK
-            self.send_response(200, "Hi")
+            # send status code
+            self.send_response(response.status_code)
 
             # send_header(keyword, value); sending header information
-            self.send_header("Content-type", "text/html")
+            for key,value in response.headers.items():
+                self.send_header(key, value)
             self.end_headers() # THIS IS REQUIRED
 
             print (f"Response from server: {self.request_version} {response.status_code} OK")
             print (f"Hello From Backend Server")
         except:
+            self.send_response(502)
+            self.end_headers
             print("Could not connect to backend server")
-        
-        # # if /hello is at end of URL
-        # if self.path == '/hello':
-        #     self.wfile.write(b"Hello, World!") # actual message that prints
-    
-        # else:
-        #     super().do_GET()
+
+# Need to set up backend servers
+def run_backendserver(port):   
+    with HTTPServer(('localhost', port), BackEndHandler) as server:
+        print(f"Server started at http://localhost:{port}")
+        server.serve_forever() # starts and keeps running server
+
+threads = []
+for port in backend_ports:
+    thread = threading.Thread(target=run_backendserver, args=(port,))
+    thread.daemon = True  # Allows the program to exit even if threads are running
+    threads.append(thread)
+    thread.start()
+
+try:
+    while True:
+        pass
+except KeyboardInterrupt:
+    print("Shutting down servers...")
 
 # Server setup listening on localhost
 # HTTPServer (serverAddress, Request Handler Class)
