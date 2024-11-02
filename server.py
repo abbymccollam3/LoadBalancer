@@ -17,11 +17,14 @@ LOG MESSAGE FORMAT:
 # navigate http://localhost:8000 -> displays files/directories on port
 
 import requests
+import itertools
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer 
 # HTTPServer (server_address, request handler class)
 
 PORT = 8000
+backends = ['http://localhost:8001', 'http://localhost:8002']
+backend_pool = itertools.cycle(backends)  # Round-robin selection
 
 # this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
@@ -52,31 +55,29 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        # send response -> 200 = OK
-        self.send_response(200, "Hi")
-
-        # send_header(keyword, value); sending header information
-        self.send_header("Content-type", "text/html")
-        self.end_headers() # THIS IS REQUIRED
-        
-        # if /hello is at end of URL
-        if self.path == '/hello':
-            self.wfile.write(b"Hello, World!") # actual message that prints
-
-        # this is sending to back end
-        elif self.path == ':8001':
-            # The API endpoint
-            url = "https://jsonplaceholder.typicode.com/posts/1"
-
+        backend_url = next(backend_pool) #selecting next backend server in iteration
+        try:
             # A GET request to the API
-            response = requests.get(url)
+            response = requests.get(backend_url)
+
+            # send response -> 200 = OK
+            self.send_response(200, "Hi")
+
+            # send_header(keyword, value); sending header information
+            self.send_header("Content-type", "text/html")
+            self.end_headers() # THIS IS REQUIRED
 
             print (f"Response from server: {self.request_version} {response.status_code} OK")
             print (f"Hello From Backend Server")
+        except:
+            print("Could not connect to backend server")
         
+        # # if /hello is at end of URL
+        # if self.path == '/hello':
+        #     self.wfile.write(b"Hello, World!") # actual message that prints
     
-        else:
-            super().do_GET()
+        # else:
+        #     super().do_GET()
 
 # Server setup listening on localhost
 # HTTPServer (serverAddress, Request Handler Class)
