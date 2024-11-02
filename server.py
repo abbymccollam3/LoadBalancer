@@ -24,9 +24,9 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 # HTTPServer (server_address, request handler class)
 
 PORT = 8000
-backends = ['http://localhost:8001', 'http://localhost:8002']
 backend_ports = [8001, 8002]
-backend_pool = itertools.cycle(backends)  # Round-robin selection
+backends = [f'http://localhost:{port}' for port in backend_ports]
+backend_pool = itertools.cycle(backends)  # round robin
 
 class BackEndHandler (SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -38,11 +38,10 @@ class BackEndHandler (SimpleHTTPRequestHandler):
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
     # intercepts GET requests from client
     def do_GET(self): 
-        # get client address
-        address = self.client_address[0]
         
-        # get command, path, request_version
-        command = f"{self.command} {self.path} {self.request_version}"
+        address = self.client_address[0] # get client address
+        path = self.path
+        command = f"{self.command} {path} {self.request_version}" # get command, path, request_version
 
         # retreives headers from request
         host = self.headers.get('Host')
@@ -63,24 +62,27 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        backend_url = next(backend_pool) + self.path #selecting next backend server in iteration
+        backend_url = next(backend_pool) + path # selecting next backend server in iteration and adding current path
         try:
             # response formed with backend url and header
             response = requests.get(backend_url, headers=self.headers)
 
             # send status code
-            self.send_response(response.status_code)
+            self.send_response(response.status_code) 
 
             # send_header(keyword, value); sending header information
             for key,value in response.headers.items():
                 self.send_header(key, value)
             self.end_headers() # THIS IS REQUIRED
+            self.wfile.write(response.content)
 
+            print(f"Header: {self.headers}")
             print (f"Response from server: {self.request_version} {response.status_code} OK")
             print (f"Hello From Backend Server")
-        except:
+        except requests.RequestException:
             self.send_response(502)
             self.end_headers
+            self.wfile.write(b"Bad Gateway: Could not connect to backend server.")
             print("Could not connect to backend server")
 
 # Need to set up backend servers
@@ -89,21 +91,15 @@ def run_backendserver(port):
         print(f"Server started at http://localhost:{port}")
         server.serve_forever() # starts and keeps running server
 
-threads = []
 for port in backend_ports:
     thread = threading.Thread(target=run_backendserver, args=(port,))
     thread.daemon = True  # Allows the program to exit even if threads are running
-    threads.append(thread)
     thread.start()
 
 try:
-    while True:
-        pass
+    # HTTPServer (serverAddress, Request Handler Class)
+    with HTTPServer(('localhost', PORT), Handler) as server:
+        print(f"Server started at http://localhost:{PORT}")
+        server.serve_forever() # starts and keeps running server
 except KeyboardInterrupt:
     print("Shutting down servers...")
-
-# Server setup listening on localhost
-# HTTPServer (serverAddress, Request Handler Class)
-with HTTPServer(('localhost', PORT), Handler) as server:
-    print(f"Server started at http://localhost:{PORT}")
-    server.serve_forever() # starts and keeps running server
