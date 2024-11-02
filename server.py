@@ -64,7 +64,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
             self.wfile.write(b"Hello, World!") # actual message that prints
 
         # this is sending to back end
-        elif self.path == '/':
+        elif self.path == ':8001':
             # The API endpoint
             url = "https://jsonplaceholder.typicode.com/posts/1"
 
