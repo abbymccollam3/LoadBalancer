@@ -43,16 +43,21 @@ backend_ports = [8001, 8002, 8003]
 backends = [f'http://localhost:{port}' for port in backend_ports]
 backend_pool = itertools.cycle(backends)  # round robin
 
-# Create health checks every period from command line
+# Health check function
+def health_check(backend_url, period):
+    try:
+        response = requests.get(backend_url)
+        code = response.status_code
 
-def timer_input():
-    period = input("Please enter health check period: ")
-    print(period)
-    
-    threading.Timer(5, health_check).start()  # Call the function again after 5 seconds
+        health = (code == 200)
+        print(f"Health Status: {'Healthy' if health else 'Unhealthy'}")
 
-def health_check():
-    print ("This is health checking")
+    except:
+        print(f"Error during health check for {backend_url}: {e}")
+        health = False
+
+    # Schedule the next health check
+    threading.Timer(period, health_check, args=(backend_url, period)).start()
 
 # this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
@@ -80,16 +85,20 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        health_check()
-
         backend_url = next(backend_pool) # selecting next backend server
         try:
             # response formed with backend url and header
             response = requests.get(backend_url + path, headers=headers)
             print(f"URL: {backend_url}")
 
+            code = response.status_code # status code
+            period = float(input("Please enter health check period: ")) # health check period
+    
+            # every period we should be doing a GET request
+            threading.Timer(period, health_check, args=(backend_url, period)).start() # Call the function after X period
+
             # send status code
-            self.send_response(response.status_code) 
+            self.send_response(code) 
 
             # send_header(keyword, value); sending header information
             for key,value in response.headers.items():
