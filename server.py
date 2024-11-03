@@ -28,12 +28,6 @@ backend_ports = [8001, 8002]
 backends = [f'http://localhost:{port}' for port in backend_ports]
 backend_pool = itertools.cycle(backends)  # round robin
 
-class BackEndHandler (SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200, "Hi")
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-
 # this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
     # intercepts GET requests from client
@@ -62,7 +56,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
 
-        backend_url = next(backend_pool) + path # selecting next backend server in iteration and adding current path
+        backend_url = next(backend_pool) # selecting next backend server
         try:
             # response formed with backend url and header
             response = requests.get(backend_url, headers=self.headers)
@@ -84,6 +78,12 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
             self.end_headers
             self.wfile.write(b"Bad Gateway: Could not connect to backend server.")
             print("Could not connect to backend server")
+
+class BackEndHandler (SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200, "Hi")
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
 
 # Need to set up backend servers
 def run_backendserver(port):   
