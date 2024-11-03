@@ -33,6 +33,7 @@ HEADER FORMAT EXAMPLE:
 import requests
 import itertools
 import threading
+import time
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer 
 # HTTPServer (server_address, request handler class)
@@ -41,6 +42,17 @@ PORT = 8000
 backend_ports = [8001, 8002, 8003]
 backends = [f'http://localhost:{port}' for port in backend_ports]
 backend_pool = itertools.cycle(backends)  # round robin
+
+# Create health checks every period from command line
+
+def timer_input():
+    period = input("Please enter health check period: ")
+    print(period)
+    
+    threading.Timer(5, health_check).start()  # Call the function again after 5 seconds
+
+def health_check():
+    print ("This is health checking")
 
 # this class defines how requests are handled
 class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, client_address, server, directory=None)
@@ -67,6 +79,8 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         # with opens the file and automatically closes file
         with open('.msg', 'a') as log_file:
             log_file.write(log_message + '\n')
+
+        health_check()
 
         backend_url = next(backend_pool) # selecting next backend server
         try:
