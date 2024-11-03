@@ -15,7 +15,7 @@ LOG MESSAGE FORMAT:
 
 '''
 HEADER FORMAT EXAMPLE:
-    Header: Host: localhost:8000
+    Host: localhost:8000
     Sec-Fetch-Site: none
     Connection: keep-alive
     Upgrade-Insecure-Requests: 1
@@ -51,19 +51,16 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         path = self.path
         command = f"{self.command} {path} {self.request_version}" # get command, path, request_version
 
-        # retreives headers from request
-        host = self.headers.get('Host')
-        user_agent = self.headers.get('User-Agent')
-        accept = self.headers.get('Accept')
+        headers = {key: value for key, value in self.headers.items()} # items iterates over the whole list
 
         # constructing log message and placing file in directory
         # log message only constructed once user navigates to page
         log_message = f"""./msg
-        Received request from {address}
-        {command}
-        Host: {host}
-        User-Agent: {user_agent}
-        Accept: {accept}"""
+        HELLO
+        Received request from {address} {command}
+        Host: {headers.get("Host: ")}
+        User-Agent: {headers.get("User-Agent: ")}
+        Accept: {headers.get("Accept: ")}"""
 
         # Write log message to .msg file in append mode
         # with opens the file and automatically closes file
@@ -73,7 +70,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         backend_url = next(backend_pool) # selecting next backend server
         try:
             # response formed with backend url and header
-            response = requests.get(backend_url, headers=self.headers)
+            response = requests.get(backend_url + path, headers=headers)
 
             # send status code
             self.send_response(response.status_code) 
@@ -89,13 +86,13 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
             print (f"Hello From Backend Server")
         except requests.RequestException:
             self.send_response(502)
-            self.end_headers
+            self.end_headers()
             self.wfile.write(b"Bad Gateway: Could not connect to backend server.")
             print("Could not connect to backend server")
 
 class BackEndHandler (SimpleHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200, "Hi")
+        self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
