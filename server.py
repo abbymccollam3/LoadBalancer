@@ -38,7 +38,7 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 # HTTPServer (server_address, request handler class)
 
 PORT = 8000
-backend_ports = [8001, 8002]
+backend_ports = [8001, 8002, 8003]
 backends = [f'http://localhost:{port}' for port in backend_ports]
 backend_pool = itertools.cycle(backends)  # round robin
 
