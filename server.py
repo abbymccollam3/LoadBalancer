@@ -46,17 +46,16 @@ backend_pool = itertools.cycle(backends)  # round robin
 # Health check function
 def health_check(backend_url, period):
     try:
-        response = requests.get(backend_url)
-        code = response.status_code
+        response = requests.get(backend_url) # make a request to the backend
+        code = response.status_code # get response code
 
         health = (code == 200)
         print(f"Health Status: {'Healthy' if health else 'Unhealthy'}")
 
     except:
-        print(f"Error during health check for {backend_url}: {e}")
-        health = False
+        print(f"Error during health check.")
 
-    # Schedule the next health check
+    # Calling itself
     threading.Timer(period, health_check, args=(backend_url, period)).start()
 
 # this class defines how requests are handled
@@ -94,8 +93,8 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
             code = response.status_code # status code
             period = float(input("Please enter health check period: ")) # health check period
     
-            # every period we should be doing a GET request
-            threading.Timer(period, health_check, args=(backend_url, period)).start() # Call the function after X period
+            # starts initial health check
+            threading.Timer(0, health_check, args=(backend_url, period)).start() # Call the function after X period
 
             # send status code
             self.send_response(code) 
