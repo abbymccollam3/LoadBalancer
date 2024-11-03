@@ -13,6 +13,20 @@ LOG MESSAGE FORMAT:
     Accept: */* 
 '''
 
+'''
+HEADER FORMAT EXAMPLE:
+    Header: Host: localhost:8000
+    Sec-Fetch-Site: none
+    Connection: keep-alive
+    Upgrade-Insecure-Requests: 1
+    Sec-Fetch-Mode: navigate
+    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+    User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0.1 Safari/605.1.15
+    Accept-Language: en-US,en;q=0.9
+    Sec-Fetch-Dest: document
+    Accept-Encoding: gzip, deflate
+'''
+
 # run python -m http.server 8000
 # navigate http://localhost:8000 -> displays files/directories on port
 
