@@ -55,6 +55,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
 
         # constructing log message and placing file in directory
         # log message only constructed once user navigates to page
+        # messages added to the end of .msg
         log_message = f"""./msg
         HELLO
         Received request from {address} {command}
@@ -71,6 +72,7 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
         try:
             # response formed with backend url and header
             response = requests.get(backend_url + path, headers=headers)
+            print(f"URL: {backend_url}")
 
             # send status code
             self.send_response(response.status_code) 
