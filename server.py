@@ -53,6 +53,7 @@ def health_check(backend_url, period):
         print(f"Health Status: {'Healthy' if health else 'Unhealthy'}")
 
     except:
+        
         print(f"Error during health check.")
 
     # Calling itself
