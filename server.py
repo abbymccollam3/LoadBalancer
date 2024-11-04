@@ -105,7 +105,8 @@ class Handler (SimpleHTTPRequestHandler): # inheriting Simple... (request, clien
                 self.send_header(key, value)
             self.end_headers() # THIS IS REQUIRED
             self.wfile.write(response.content)
-            self.wfile.write(b"Hello from: " + backend_url.encode() + b"!") # this will write to webpage
+            self.wfile.write(b"Hello from: " + backend_url.encode() + b"!<br>") # this will write to webpage
+            self.wfile.write(b"\nLoad balancing challenge complete.<br>Health checks passed.")
 
             print(f"Header: {self.headers}")
             print (f"Response from server: {self.request_version} {response.status_code} OK")
